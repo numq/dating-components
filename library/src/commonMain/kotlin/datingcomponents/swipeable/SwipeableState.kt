@@ -1,6 +1,7 @@
 package datingcomponents.swipeable
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
@@ -68,20 +69,20 @@ class SwipeableState constructor(
     ) {
         coroutineScope.launch {
 
-            isAnimationRunning = true
-
             val swiped = swipeOffset?.run { swipeAvailable(x) } ?: true
 
             isSwipingToDefault = !swiped
             isSwipingToLeft = swiped && direction == SwipeDirection.LEFT
             isSwipingToRight = swiped && direction == SwipeDirection.RIGHT
 
+            isAnimationRunning = true
+
             joinAll(
                 launch {
-                    animatedAlpha.animateTo(if (isSwipingToDefault) 1f else 0f, tween(animationDuration))
+                    animatedAlpha.animateTo(if (isSwipingToDefault) 1f else 0f, animation)
                 },
                 launch {
-                    animatedScale.animateTo(if (isSwipingToDefault) .9f else 1f, tween(animationDuration))
+                    animatedScale.animateTo(if (isSwipingToDefault) .9f else 1f, animation)
                 },
                 launch {
                     animatedShift.animateTo(
@@ -89,7 +90,7 @@ class SwipeableState constructor(
                             SwipeDirection.LEFT -> rect.width * -1.5f
                             SwipeDirection.RIGHT -> rect.width * 1.5f
                             else -> 0f
-                        } else 0f, tween(animationDuration)
+                        } else 0f, animation
                     )
                 },
                 launch {
@@ -98,9 +99,12 @@ class SwipeableState constructor(
                             SwipeDirection.LEFT -> swipeAngle * -1.5f
                             SwipeDirection.RIGHT -> swipeAngle * 1.5f
                             else -> 0f
-                        } else 0f, tween(animationDuration))
+                        } else 0f, animation
+                    )
                 }
             )
+
+            isAnimationRunning = false
 
             if (swiped) when (direction) {
                 SwipeDirection.LEFT -> onLeft()
@@ -108,7 +112,10 @@ class SwipeableState constructor(
                 else -> Unit
             }
 
-            isAnimationRunning = false
+            animatedAlpha.snapTo(1f)
+            animatedScale.snapTo(.9f)
+            animatedShift.snapTo(0f)
+            animatedRotation.snapTo(0f)
 
             isSwipingToDefault = false
             isSwipingToLeft = false
@@ -127,7 +134,9 @@ class SwipeableState constructor(
 
     internal val animatedRotation = Animatable(0f)
 
-    private val animationDuration = 500
+    private val animationDuration = 250
+
+    private val animation = tween<Float>(durationMillis = animationDuration, easing = LinearEasing)
 
     private var isSwipingToDefault by mutableStateOf(false)
 

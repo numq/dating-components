@@ -33,9 +33,7 @@ fun ProfileScreen() {
         }
     }
 
-    val onSwipe: () -> Unit = {
-        profiles.removeFirstOrNull()
-    }
+    val onSwipe: () -> Unit = { profiles.removeFirstOrNull() }
 
     val swipeableState = rememberSwipeableState(
         onLeft = onSwipe,
